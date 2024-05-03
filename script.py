@@ -30,33 +30,68 @@ def dataframe():
 
     df = pd.DataFrame(rows, columns=columns)
     print(df)
+
+    cursor.close()
+    conn.close()
+
     return df
 
 def aprovar():
+
     conn = conexao()  
     if conn is None:
         return  
 
     cursor = conn.cursor()
 
-    cursor.execute("insert into  * from user_new_loan;")
+    inserir_aprovar = cursor.execute(f'''insert into user_new_loan (user_id, parcelas)
+                   values({user_id}, {parcelas} )''')
+    
+    cursor.close()
+    conn.close()
+    
+    return inserir_aprovar
 
+def reprovar():
+
+    conn = conexao()
+    if conn is None:
+        return
+    
+    cursor = conn.cursor()
+
+    inserir_desaprovar = cursor.execute(f'''insert into user_new_loan (user_id, parcelas)
+                                            values({user_id}, {ultimo_pedido} )''')
+
+    cursor.close()
+    conn.close()
+
+    return inserir_desaprovar
 
 def analise():
     df = dataframe()   
     
-
     for i, row in df.iterrows():
-        salario = row['salario']
+
         idade = int((row['idade']))
-        if idade > 65:
-            # margem_loan = str(salario * 0.45)
-            # margem = []
-            # margem.append(margem_loan)
-            # print(margem)
-            # print(margem_loan)
+        valor_emprestado = row['valor_emprestado']
+        margem_loan = row['margem_loan']
+
+        if idade < 65 and valor_emprestado > margem_loan:
+            match row['convenio']:
+                case 'basico':
+                    parcelas = 3
+                case 'intermediario':
+                    parcelas = 5
+                case 'premium':
+                    parcelas = 7
+                case _:
+                    parcelas = 10
+            aprovar()
+
             print(f'O empréstimo do {row['nome']} não foi aprovado')
         else:
+            reprovar()
             print(f'O empréstimo do {row['nome']} foi aprovado')
 
 
